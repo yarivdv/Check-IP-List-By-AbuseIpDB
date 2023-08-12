@@ -1,11 +1,6 @@
 import requests
 import pandas as pd
 
-
-df = pd.read_excel(r'InputFile.xlsx')
-if 'Source IP' not in df.columns:
-    raise ValueError("No 'Source IP' column in the excel file")
-
 def check_abuse_ip(ip_address, api_key):
     url = f'https://api.abuseipdb.com/api/v2/check?ipAddress={ip_address}'
     headers = {
@@ -30,17 +25,29 @@ def check_abuse_ip(ip_address, api_key):
         return None
 
 if __name__ == "__main__":
-    print("Insert API KEY:")
-    api_key = "Insert API KEY HERE"
-    # for i in df.[a]
-    # ip_address = input("Enter the IP address to check abuse confidence: ")
+    api_key = "Enter Your API KEY"
+    df = pd.read_excel(r'YouInputFile+Folder+Name.xlsx')
+    
+    if 'Attacker Address' not in df.columns:
+        raise ValueError("No 'Attacker Address' column in the excel file")
+    columns_to_keep = ['Attacker Address',' Attacker Geo Country Name','Target Address','Target Port','Device Action']
+    # Remove the columns that are not in the selected list
+    df = df[columns_to_keep]
+    # Save the modified DataFrame back to an Excel file
+    # remove Duplicates Attacker Addresses from the DataFrame
+    df = df.drop_duplicates(subset='Attacker Address', keep='first')
+
     for index, row in df.iterrows():
-        ip_address = row['Source IP']
+        ip_address = row['Attacker Address']
         confidence = check_abuse_ip(ip_address, api_key)
-        if confidence > 70:
+        if confidence > 74:
             df.at[index, 'Confidence'] = confidence
-        # if confidence is not None:
-        #     print(f"Confidence of Abuse for {ip_address}: {confidence}")
+        if confidence is not None:
+            print(f"Confidence of Abuse for {ip_address}: {confidence}")
         #     return
 
-df.to_excel(r'OutputFile.xlsx', index=False)
+    # Remove rows with null values in the Confidence column
+    df = df.dropna(subset=['Confidence'])
+
+    df.to_excel(r'OutputFileFoler+Name.xlsx', index=False)
+    print("Done")
